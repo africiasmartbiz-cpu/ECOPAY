@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ECO FRAIS — Application de Gestion Scolaire</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      background: #0A101D;
+      color: #FFFFFF;
+      overflow-x: hidden;
+    }
+
+    /* ==========================================================================
+       SPLASH SCREEN ANIMATION CAPTIVANTE
+       ========================================================================== */
+    .splash-container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 40%, #101C33 0%, #0A101D 70%, #060B14 100%);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 999;
+      user-select: none;
+    }
+    .ambient-glow-1 {
+      position: absolute;
+      top: -100px;
+      left: -100px;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(2, 132, 199, 0.25) 0%, rgba(2, 132, 199, 0) 70%);
+      border-radius: 50%;
+      filter: blur(50px);
+      animation: pulseGlow 4s infinite alternate ease-in-out;
+      pointer-events: none;
+    }
+    .ambient-glow-2 {
+      position: absolute;
+      bottom: -100px;
+      right: -100px;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%);
+      border-radius: 50%;
+      filter: blur(50px);
+      animation: pulseGlow 4s infinite alternate-reverse ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes pulseGlow {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      100% { transform: scale(1.15); opacity: 1; }
+    }
+    .logo-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .logo-halo {
+      position: absolute;
+      inset: -14px;
+      border-radius: 36px;
+      background: linear-gradient(135deg, #0284c7, #0ea5e9, #10b981);
+      opacity: 0.8;
+      filter: blur(18px);
+      animation: haloBreath 2.4s infinite alternate ease-in-out;
+    }
+    @keyframes haloBreath {
+      0% { transform: scale(0.95); opacity: 0.6; }
+      100% { transform: scale(1.08); opacity: 0.95; }
+    }
+    .logo-card {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      background: #FFFFFF;
+      border-radius: 28px;
+      padding: 12px;
+      box-shadow: 0 20px 40px rgba(2, 132, 199, 0.35), 0 0 0 2px rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: logoPop 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes logoPop {
+      0% { transform: scale(0.4) rotate(-6deg); opacity: 0; }
+      70% { transform: scale(1.06) rotate(1deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .logo-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 18px;
+    }
+    .title-group {
+      text-align: center;
+      margin-bottom: 28px;
+      animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .brand-title {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .brand-title .blue { color: #0284c7; }
+    .brand-title .green { color: #10b981; }
+    .brand-sub {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #94A3B8;
+      margin-bottom: 8px;
+    }
+    .brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748B;
+      padding: 4px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulseDot 1.5s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .loader-container {
+      width: 220px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .loader-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #0284c7, #0ea5e9, #10b981);
+      border-radius: 10px;
+      animation: fillBar 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes fillBar {
+      0% { width: 0%; }
+      50% { width: 65%; }
+      100% { width: 100%; }
+    }
+    .status-text {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #64748B;
+      font-weight: 500;
+    }
+    .skip-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+    }
+    .skip-btn:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* ==========================================================================
+       PAGE PRINCIPALE POST-SPLASH
+       ========================================================================== */
+    .app-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 20px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: #fff;
+      padding: 3px;
+    }
+    .header-logo h2 {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      background: rgba(2, 132, 199, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(2, 132, 199, 0.3);
+      border-radius: 20px;
+    }
+    .main-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      margin: 16px 0;
+    }
+    .hero-title {
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+    .hero-desc {
+      font-size: 13px;
+      color: #94A3B8;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+    .action-btn:active {
+      transform: scale(0.98);
+    }
+    .btn-emerald {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #FFFFFF;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+    }
+    .btn-sky {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #FFFFFF;
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
+    }
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+    }
+    .server-config {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .server-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .input-group {
+      display: flex;
+      gap: 8px;
+    }
+    .url-input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      font-size: 12px;
+      outline: none;
+    }
+    .url-input:focus {
+      border-color: #0284c7;
+    }
+    .save-btn {
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: #0284c7;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+    .footer-bar {
+      text-align: center;
+      font-size: 11px;
+      color: #64748B;
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <!-- ==========================================================================
+       SPLASH SCREEN AVEC ANIMATION DU LOGO ET PROGRESSION
+       ========================================================================== -->
+  <div id="splash" class="splash-container">
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
+    <button id="skipBtn" class="skip-btn" onclick="proceedToApp()">Passer &rarr;</button>
+
+    <div class="logo-wrapper">
+      <div class="logo-halo"></div>
+      <div class="logo-card">
+        <img src="logo.jpg" alt="Logo ECO FRAIS">
+      </div>
+    </div>
+
+    <div class="title-group">
+      <div class="brand-title">
+        <span class="blue">Eco</span><span class="green">~frais</span>
+      </div>
+      <div class="brand-sub">Application de Gestion Scolaire</div>
+      <div class="brand-tag">
+        <span class="status-dot"></span>
+        <span>Togo &bull; Zone UEMOA (XOF)</span>
+      </div>
+    </div>
+
+    <div class="loader-container">
+      <div class="loader-bar"></div>
+    </div>
+    <div id="statusLabel" class="status-text">Initialisation de l'application...</div>
+  </div>
+
+  <!-- ==========================================================================
+       ÉCRAN D'ACCUEIL MOBILE ECO FRAIS
+       ========================================================================== -->
+  <div class="app-screen">
+    <div>
+      <div class="header-bar">
+        <div class="header-logo">
+          <img src="logo.jpg" alt="ECO FRAIS">
+          <div>
+            <h2><span style="color:#0284c7">Eco</span><span style="color:#10b981">~frais</span></h2>
+            <p style="font-size:10px; color:#94A3B8;">ECO & FRAIS Togo</p>
+          </div>
+        </div>
+        <span class="badge-pill">v1.0.0 Release</span>
+      </div>
+
+      <div class="main-card">
+        <h1 class="hero-title">Portail Scolaire &amp; Recouvrement</h1>
+        <p class="hero-desc">
+          Gestion des frais de scolarité, reçus officiels infalsifiables, notifications WhatsApp automatisées et suivi en temps réel.
+        </p>
+
+        <!-- Bouton Espace Parents WhatsApp -->
+        <button onclick="goToRoute('/parent/login')" class="action-btn btn-emerald">
+          <span>👨‍👩‍👧 Accès Espace Parents (WhatsApp) &rarr;</span>
+        </button>
+
+        <!-- Bouton Direction & Comptabilité -->
+        <button onclick="goToRoute('/login')" class="action-btn btn-sky">
+          <span>🏫 Accès Direction &amp; Comptabilité &rarr;</span>
+        </button>
+
+        <!-- Bouton Site Web Complet -->
+        <button onclick="goToRoute('/')" class="action-btn btn-outline">
+          <span>🌐 Découvrir la Plateforme Complète</span>
+        </button>
+
+        <!-- Configuration de l'URL du serveur distant -->
+        <div class="server-config">
+          <label class="server-label">Serveur de l'école (URL Production) :</label>
+          <div class="input-group">
+            <input 
+              id="serverUrlInput" 
+              type="url" 
+              class="url-input" 
+              placeholder="https://votre-ecole.com"
+            />
+            <button onclick="saveAndConnectServer()" class="save-btn">Connecter</button>
+          </div>
+          <p id="serverFeedback" style="font-size:10px; color:#64748B; margin-top:6px;">
+            Par défaut : serveur local ou déployé connecté.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      &copy; 2026 ECO &amp; FRAIS (Eco~frais) Togo &bull; XOF
+    </div>
+  </div>
+
+  <script>
+    // Récupération de l'URL du serveur personnalisé ou détection automatique
+    const savedServer = localStorage.getItem("ecofrais_server_url");
+    const inputEl = document.getElementById("serverUrlInput");
+    if (savedServer && inputEl) {
+      inputEl.value = savedServer;
+    }
+
+    function saveAndConnectServer() {
+      const val = (document.getElementById("serverUrlInput").value || "").trim();
+      const feedback = document.getElementById("serverFeedback");
+      if (!val) {
+        localStorage.removeItem("ecofrais_server_url");
+        if (feedback) feedback.textContent = "URL réinitialisée au serveur par défaut.";
+        return;
+      }
+      try {
+        new URL(val);
+        localStorage.setItem("ecofrais_server_url", val);
+        if (feedback) {
+          feedback.style.color = "#10b981";
+          feedback.textContent = "Connecté à " + val + " ! Redirection...";
+        }
+        setTimeout(() => {
+          window.location.href = val;
+        }, 800);
+      } catch (e) {
+        if (feedback) {
+          feedback.style.color = "#f87171";
+          feedback.textContent = "Format d'URL invalide (ex: https://mon-domaine.com)";
+        }
+      }
+    }
+
+    function getBaseUrl() {
+      const custom = localStorage.getItem("ecofrais_server_url");
+      if (custom) return custom.replace(/\/$/, "");
+      // Si nous tournons sur un serveur web (ex: Next.js dev ou prod)
+      if (window.location.protocol.startsWith("http")) {
+        return window.location.origin;
+      }
+      // Cas Capacitor standalone sans serveur configuré
+      return "";
+    }
+
+    function goToRoute(path) {
+      const base = getBaseUrl();
+      if (base) {
+        window.location.href = base + path;
+      } else {
+        // Dans une webview Capacitor locale, informer ou ouvrir le navigateur
+        const configuredUrl = localStorage.getItem("ecofrais_server_url");
+        if (configuredUrl) {
+          window.location.href = configuredUrl + path;
+        } else {
+          // Demander la configuration du serveur ou se brancher au port 3000 local
+          window.location.href = "http://localhost:3000" + path;
+        }
+      }
+    }
+
+    function proceedToApp() {
+      const splash = document.getElementById("splash");
+      if (splash) {
+        splash.style.opacity = "0";
+        splash.style.transform = "scale(1.05)";
+        setTimeout(() => {
+          splash.style.display = "none";
+          // Si une URL de serveur est mémorisée et que nous sommes en webview standalone
+          const custom = localStorage.getItem("ecofrais_server_url");
+          if (custom && !window.location.href.startsWith(custom)) {
+            window.location.href = custom;
+          }
+        }, 550);
+      }
+    }
+
+    // Animation du message de statut
+    setTimeout(() => {
+      const statusLabel = document.getElementById("statusLabel");
+      if (statusLabel) statusLabel.textContent = "Bienvenue sur ECO FRAIS";
+    }, 1200);
+
+    // Fin automatique du splash après 1900ms
+    setTimeout(() => {
+      proceedToApp();
+    }, 1900);
+  </script>
+</body>
+</html>

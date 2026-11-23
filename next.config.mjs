@@ -1,0 +1,15 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      canvg: false,
+      html2canvas: false,
+      dompurify: false,
+    };
+    return config;
+  },
+};
+
+export default nextConfig;

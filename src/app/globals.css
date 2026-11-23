@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-navy: #1E143E;
+  --primary-purple: #5D3CF2;
+  --primary-blue: #2563EB;
+}
+
+body {
+  color: #1f2937;
+  background: #FAF9FD;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========================================================
+   EFFETS LUMINESCENTS AU SURVOL ET AU TOUCHER (GLOW EFFECTS)
+   ======================================================== */
+
+/* Bouton Luminescent Violet (Get Started, Validation, etc.) */
+.btn-glow-purple {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px 0 rgba(93, 60, 242, 0.35);
+}
+.btn-glow-purple:hover, 
+.btn-glow-purple:focus, 
+.btn-glow-purple:active {
+  box-shadow: 0 0 28px 6px rgba(93, 60, 242, 0.7), 0 6px 20px 0 rgba(93, 60, 242, 0.4);
+  filter: brightness(1.15);
+  transform: translateY(-1.5px) scale(1.01);
+}
+
+/* Bouton Luminescent Vert WhatsApp & Succès */
+.btn-glow-green {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px 0 rgba(37, 211, 102, 0.35);
+}
+.btn-glow-green:hover, 
+.btn-glow-green:focus, 
+.btn-glow-green:active {
+  box-shadow: 0 0 28px 7px rgba(37, 211, 102, 0.75), 0 6px 20px 0 rgba(37, 211, 102, 0.45);
+  filter: brightness(1.15);
+  transform: translateY(-1.5px) scale(1.02);
+}
+
+/* Bouton Luminescent Bleu Caisse & Action */
+.btn-glow-blue {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.35);
+}
+.btn-glow-blue:hover, 
+.btn-glow-blue:focus, 
+.btn-glow-blue:active {
+  box-shadow: 0 0 28px 6px rgba(37, 99, 235, 0.7), 0 6px 20px 0 rgba(37, 99, 235, 0.4);
+  filter: brightness(1.15);
+  transform: translateY(-1.5px) scale(1.01);
+}
+
+/* Illumination générale pour tous les boutons de l'application */
+button {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+button:hover {
+  filter: brightness(1.1);
+}
+button:active {
+  transform: scale(0.97);
+  filter: brightness(1.15);
+}
+
+/* Scrollbars personnalisées */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5D3CF2;
+}
+
+/* Print optimizations */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}

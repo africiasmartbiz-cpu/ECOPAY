@@ -1,0 +1,423 @@
+// SCHOOLPAY — Schéma de Base de Données Multi-Tenant
+// Compatible SQLite et PostgreSQL via DATABASE_URL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 1. PLATEFORME SAAS & MULTI-TENANCY
+// ==========================================
+
+model Establishment {
+  id              String   @id @default(cuid())
+  code            String   @unique // ex: "REN-LOM", "STJ-LOM"
+  name            String
+  logoUrl         String?
+  address         String
+  city            String   @default("Lomé")
+  country         String   @default("Togo")
+  phone           String
+  email           String   @unique
+  directorName    String
+  status          String   @default("ACTIVE") // ACTIVE, TRIAL, SUSPENDED, ARCHIVED
+  suspensionReason String?
+  currency        String   @default("XOF")
+  timezone        String   @default("Africa/Lome")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  users               User[]
+  academicYears       AcademicYear[]
+  classes             Class[]
+  feeTypes            FeeType[]
+  feeStructures       FeeStructure[]
+  students            Student[]
+  parents             Parent[]
+  invoices            StudentInvoice[]
+  paymentTransactions PaymentTransaction[]
+  receipts            Receipt[]
+  subscriptions       Subscription[]
+  supportTickets      SupportTicket[]
+  auditLogs           AuditLog[]
+  notificationLogs    NotificationLog[]
+}
+
+model SubscriptionPlan {
+  id              String   @id @default(cuid())
+  code            String   @unique // ESSENTIEL, PRO, EXCELLENCE
+  name            String
+  description     String
+  priceMonthly    Int      // En XOF
+  priceQuarterly  Int      // En XOF
+  priceYearly     Int      // En XOF
+  maxStudents     Int      // -1 pour illimité
+  maxUsers        Int      // -1 pour illimité
+  features        String   // JSON string des fonctionnalités incluses
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  subscriptions   Subscription[]
+}
+
+model Subscription {
+  id                String            @id @default(cuid())
+  establishmentId   String
+  establishment     Establishment     @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  planId            String
+  plan              SubscriptionPlan  @relation(fields: [planId], references: [id])
+  billingCycle      String            @default("MONTHLY") // MONTHLY, QUARTERLY, YEARLY
+  status            String            @default("ACTIVE") // TRIAL, ACTIVE, EXPIRED, CANCELLED
+  startDate         DateTime          @default(now())
+  endDate           DateTime
+  trialEndsAt       DateTime?
+  autoRenew         Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  payments          SubscriptionPayment[]
+}
+
+model SubscriptionPayment {
+  id              String        @id @default(cuid())
+  subscriptionId  String
+  subscription    Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount          Int           // XOF
+  currency        String        @default("XOF")
+  paymentMethod   String        // TMONEY, FLOOZ, CARTE, VIREMENT
+  reference       String        @unique
+  status          String        @default("CONFIRMED") // PENDING, CONFIRMED, FAILED
+  paidAt          DateTime      @default(now())
+  receiptUrl      String?
+}
+
+// ==========================================
+// 2. UTILISATEURS, RÔLES ET AUTHENTIFICATION
+// ==========================================
+
+model User {
+  id                String         @id @default(cuid())
+  tenantId          String?        // Nullable uniquement pour SUPER_ADMIN
+  establishment     Establishment? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email             String         @unique
+  passwordHash      String
+  fullName          String
+  phone             String?
+  avatarUrl         String?
+  role              String         // SUPER_ADMIN, ESTABLISHMENT_ADMIN, DIRECTOR, ACCOUNTANT, PARENT
+  isActive          Boolean        @default(true)
+  lastLoginAt       DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // Relations
+  parentProfile     Parent?
+  receivedPayments  PaymentTransaction[] @relation("AccountantPayments")
+  createdTickets    SupportTicket[]      @relation("UserTickets")
+  ticketReplies     SupportReply[]       @relation("UserReplies")
+  auditActions      AuditLog[]           @relation("UserAuditLogs")
+}
+
+// ==========================================
+// 3. STRUCTURE SCOLAIRE & ÉLÈVES
+// ==========================================
+
+model AcademicYear {
+  id              String        @id @default(cuid())
+  tenantId        String
+  establishment   Establishment @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String        // ex: "2024-2025"
+  startDate       DateTime
+  endDate         DateTime
+  isCurrent       Boolean       @default(false)
+  isArchived      Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  classes         Class[]
+  enrollments     Enrollment[]
+  feeStructures   FeeStructure[]
+  invoices        StudentInvoice[]
+}
+
+model Class {
+  id              String        @id @default(cuid())
+  tenantId        String
+  establishment   Establishment @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  academicYearId  String
+  academicYear    AcademicYear  @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  name            String        // ex: "6ème A", "Terminale C"
+  level           String        // MATERNELLE, PRIMAIRE, COLLEGE, LYCEE
+  capacity        Int           @default(45)
+  monthlyTuition  Int           @default(0) // XOF
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  enrollments     Enrollment[]
+  feeStructures   FeeStructure[]
+}
+
+model Student {
+  id              String         @id @default(cuid())
+  tenantId        String
+  establishment   Establishment  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  matricule       String         @unique // ex: "MAT-2024-001"
+  firstName       String
+  lastName        String
+  gender          String         // M, F
+  birthDate       DateTime
+  birthPlace      String?
+  address         String?
+  photoUrl        String?
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  enrollments     Enrollment[]
+  parentLinks     ParentStudent[]
+  invoices        StudentInvoice[]
+  payments        PaymentTransaction[]
+  receipts        Receipt[]
+  notificationLogs NotificationLog[]
+}
+
+model Parent {
+  id              String         @id @default(cuid())
+  tenantId        String
+  establishment   Establishment  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId          String?        @unique
+  user            User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  fullName        String
+  relationship    String         @default("Père") // Père, Mère, Tuteur
+  phone           String         // Format international +228XXXXXXXX
+  phoneSecondary  String?
+  email           String?
+  address         String?
+  whatsappOptIn   Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  studentLinks    ParentStudent[]
+}
+
+model ParentStudent {
+  id          String   @id @default(cuid())
+  parentId    String
+  parent      Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  isEmergencyContact Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  @@unique([parentId, studentId])
+}
+
+model Enrollment {
+  id              String        @id @default(cuid())
+  studentId       String
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId         String
+  class           Class         @relation(fields: [classId], references: [id], onDelete: Cascade)
+  academicYearId  String
+  academicYear    AcademicYear  @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  enrollmentDate  DateTime      @default(now())
+  status          String        @default("ACTIVE") // ACTIVE, SUSPENDED, TRANSFERRED
+  createdAt       DateTime      @default(now())
+
+  @@unique([studentId, academicYearId])
+}
+
+// ==========================================
+// 4. FRAIS, FACTURATION & ÉCHÉANCIERS
+// ==========================================
+
+model FeeType {
+  id              String        @id @default(cuid())
+  tenantId        String
+  establishment   Establishment @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  code            String        // INSCRIPTION, SCOLARITE, EXAMEN, CANTINE, TRANSPORT, UNIFORME
+  name            String
+  description     String?
+  isMandatory     Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+
+  feeStructures   FeeStructure[]
+}
+
+model FeeStructure {
+  id              String        @id @default(cuid())
+  tenantId        String
+  establishment   Establishment @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  academicYearId  String
+  academicYear    AcademicYear  @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  classId         String?
+  class           Class?        @relation(fields: [classId], references: [id], onDelete: SetNull)
+  feeTypeId       String
+  feeType         FeeType       @relation(fields: [feeTypeId], references: [id], onDelete: Cascade)
+  name            String        // ex: "Scolarité Tranche 1 (30%)"
+  amount          Int           // XOF
+  dueDate         DateTime?
+  installmentOrder Int          @default(1)
+  createdAt       DateTime      @default(now())
+
+  invoiceItems    InvoiceItem[]
+}
+
+model StudentInvoice {
+  id              String        @id @default(cuid())
+  tenantId        String
+  establishment   Establishment @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYearId  String
+  academicYear    AcademicYear  @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  invoiceNumber   String        @unique // ex: "FAC-2024-0001"
+  totalAmount     Int           // Montant total en XOF
+  discountAmount  Int           @default(0) // Bourses / Remises
+  finalAmount     Int           // totalAmount - discountAmount
+  paidAmount      Int           @default(0)
+  balanceAmount   Int           // finalAmount - paidAmount
+  status          String        @default("UNPAID") // UNPAID, PARTIAL, PAID, OVERDUE
+  dueDate         DateTime
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  items           InvoiceItem[]
+  allocations     PaymentAllocation[]
+}
+
+model InvoiceItem {
+  id              String          @id @default(cuid())
+  invoiceId       String
+  invoice         StudentInvoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  feeStructureId  String?
+  feeStructure    FeeStructure?   @relation(fields: [feeStructureId], references: [id], onDelete: SetNull)
+  description     String
+  amount          Int             // XOF
+  dueDate         DateTime?
+}
+
+// ==========================================
+// 5. CAISSE, TRANSACTIONS & REÇUS
+// ==========================================
+
+model PaymentTransaction {
+  id              String        @id @default(cuid())
+  tenantId        String
+  establishment   Establishment @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  receivedById    String
+  receivedBy      User          @relation("AccountantPayments", fields: [receivedById], references: [id])
+  receiptNumber   String        @unique // Format: "REC-2024-REN-0001"
+  idempotencyKey  String        @unique // Empêche le double encaissement
+  amount          Int           // Montant payé en XOF
+  paymentMethod   String        // ESPECES, TMONEY, FLOOZ, VIREMENT, CHEQUE
+  referenceNumber String?       // ex: Ref transaction TMoney/Flooz
+  payerName       String?       // Nom de celui qui a versé
+  payerPhone      String?
+  notes           String?
+  status          String        @default("VALIDATED") // VALIDATED, CANCELLED
+  cancellationReason String?
+  paymentDate     DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+
+  allocations     PaymentAllocation[]
+  receipt         Receipt?
+}
+
+model PaymentAllocation {
+  id              String             @id @default(cuid())
+  transactionId   String
+  transaction     PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  invoiceId       String
+  invoice         StudentInvoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  allocatedAmount Int                // XOF
+  createdAt       DateTime           @default(now())
+}
+
+model Receipt {
+  id              String             @id @default(cuid())
+  tenantId        String
+  establishment   Establishment      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  transactionId   String             @unique
+  transaction     PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  receiptNumber   String             @unique
+  pdfPath         String?
+  viewCount       Int                @default(0)
+  createdAt       DateTime           @default(now())
+}
+
+// ==========================================
+// 6. NOTIFICATIONS & WHATSAPP
+// ==========================================
+
+model NotificationLog {
+  id              String         @id @default(cuid())
+  tenantId        String
+  establishment   Establishment  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId       String?
+  student         Student?       @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  recipientPhone  String
+  channel         String         @default("WHATSAPP") // WHATSAPP_CLICK, WHATSAPP_CLOUD_API, SMS
+  templateCode    String         // REMINDER, PAYMENT_CONFIRMATION, DUE_DATE, DEBT_ALERT, CUSTOM
+  content         String
+  status          String         @default("PREPARED") // PREPARED, SENT, FAILED
+  sentByUserId    String?
+  createdAt       DateTime       @default(now())
+}
+
+// ==========================================
+// 7. SUPPORT SAAS & AUDIT
+// ==========================================
+
+model SupportTicket {
+  id              String        @id @default(cuid())
+  tenantId        String
+  establishment   Establishment @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  creatorId       String
+  creator         User          @relation("UserTickets", fields: [creatorId], references: [id], onDelete: Cascade)
+  subject         String
+  message         String
+  priority        String        @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status          String        @default("NEW") // NEW, IN_PROGRESS, RESOLVED, CLOSED
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  replies         SupportReply[]
+}
+
+model SupportReply {
+  id              String        @id @default(cuid())
+  ticketId        String
+  ticket          SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User          @relation("UserReplies", fields: [userId], references: [id], onDelete: Cascade)
+  message         String
+  isAdminResponse Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+}
+
+model AuditLog {
+  id              String         @id @default(cuid())
+  tenantId        String?
+  establishment   Establishment? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId          String?
+  user            User?          @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  action          String         // PAYMENT_CREATED, PAYMENT_CANCELLED, STUDENT_ENROLLED, SCHOOL_SUSPENDED
+  entityType      String         // PaymentTransaction, Student, Establishment, User
+  entityId        String?
+  details         String?        // JSON string des changements
+  ipAddress       String?
+  createdAt       DateTime       @default(now())
+}
