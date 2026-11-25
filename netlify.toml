@@ -1,0 +1,13 @@
+# =========================================================================
+# CONFIGURATION DE DÉPLOIEMENT NETLIFY — ECOPAY (ECO & FRAIS)
+# =========================================================================
+
+[build]
+  command = "npx prisma generate && next build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20"
