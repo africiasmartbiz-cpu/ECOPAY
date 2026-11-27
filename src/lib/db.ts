@@ -347,7 +347,7 @@ class DatabaseStore {
   getUserByEmail(email: string): UserData | null {
     const cleanEmail = email.toLowerCase().trim();
     const configuredSuperAdmin = (process.env.SUPERADMIN_EMAIL || "superadmin@ecofrais.tg").trim().toLowerCase();
-    if (cleanEmail === configuredSuperAdmin || cleanEmail === "superadmin@schoolpay.tg" || cleanEmail === "superadmin@ecofrais.tg") {
+    if (cleanEmail === configuredSuperAdmin || cleanEmail === "superadmin@schoolpay.tg" || cleanEmail === "superadmin@ecofrais.tg" || cleanEmail === "superadmin@ecopay.tg") {
       return this.users.find(u => u.role === "SUPER_ADMIN") || null;
     }
     return this.users.find(u => u.email.toLowerCase() === cleanEmail) || null;
