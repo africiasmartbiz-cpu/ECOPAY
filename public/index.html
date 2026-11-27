@@ -496,17 +496,12 @@
 
     function goToRoute(path) {
       const base = getBaseUrl();
-      if (base) {
+      if (base && !base.includes("localhost") && !window.location.href.includes("public/index.html")) {
         window.location.href = base + path;
       } else {
-        // Dans une webview Capacitor locale, informer ou ouvrir le navigateur
         const configuredUrl = localStorage.getItem("ecofrais_server_url");
-        if (configuredUrl) {
-          window.location.href = configuredUrl + path;
-        } else {
-          // Demander la configuration du serveur ou se brancher au port 3000 local
-          window.location.href = "http://localhost:3000" + path;
-        }
+        const targetUrl = configuredUrl || "https://ecopay-kw04.netlify.app";
+        window.location.href = targetUrl + path;
       }
     }
 
@@ -517,11 +512,8 @@
         splash.style.transform = "scale(1.05)";
         setTimeout(() => {
           splash.style.display = "none";
-          // Si une URL de serveur est mémorisée et que nous sommes en webview standalone
           const custom = localStorage.getItem("ecofrais_server_url");
-          if (custom && !window.location.href.startsWith(custom)) {
-            window.location.href = custom;
-          }
+          window.location.href = custom || "https://ecopay-kw04.netlify.app";
         }, 550);
       }
     }
