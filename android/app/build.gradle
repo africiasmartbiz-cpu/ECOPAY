@@ -24,6 +24,10 @@ android {
             keyPassword 'EcoFrais@2026TogoSecureKey#'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
     buildTypes {
         release {
             signingConfig signingConfigs.release
